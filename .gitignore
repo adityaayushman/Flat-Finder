@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+pipeline/cache/
+pipeline/out/
+pipeline/__pycache__/
+pipeline/.pytest_cache/
