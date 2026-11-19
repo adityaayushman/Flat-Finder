@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Homefit</title>
+  <meta name="description" content="Rank every housing society in Gurugram by how well it fits your budget, bedroom size, commute and priorities.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body data-tab="map">
+  <div id="map" aria-label="Map of societies"></div>
+
+  <header class="bar">
+    <div class="brand">Homefit <span id="city-name">Gurugram</span></div>
+    <div class="bar-actions">
+      <button id="btn-work" class="ghost" title="Click the map to set your workplace">Set workplace</button>
+      <button id="btn-theme" class="ghost" aria-label="Switch light or dark map">Map</button>
+      <button id="btn-share" class="ghost">Share</button>
+      <button id="btn-short" class="primary">Shortlist <b id="short-n">0</b></button>
+    </div>
+  </header>
+
+  <aside class="panel left" id="filters" aria-label="Filters">
+    <div class="search"><input id="q" type="search" placeholder="Find a society or sector" autocomplete="off" aria-label="Search"><ol id="q-results" hidden></ol></div>
+
+    <div class="seg" id="mode"><button data-v="buy">Buy</button><button data-v="rent">Rent</button></div>
+
+    <section><h3>Home</h3>
+      <div class="label">BHK</div><div class="chips" id="f-bhk"></div>
+      <div class="label">Budget <output id="o-budget">Any</output></div>
+      <input type="range" id="f-budget" aria-label="Budget">
+      <div class="label">Size <output id="o-size">Any</output></div>
+      <div class="two"><input type="number" id="f-min" placeholder="Min sq ft" min="0" step="50" aria-label="Minimum sq ft"><input type="number" id="f-max" placeholder="Max sq ft" min="0" step="50" aria-label="Maximum sq ft"></div>
+      <div class="label">Smallest bedroom, shorter side <output id="o-room">Any</output></div>
+      <input type="range" id="f-room" min="0" max="14" step="0.5" value="0" aria-label="Smallest bedroom width in feet">
+      <label class="check"><input type="checkbox" id="f-ready"> Ready to move only</label>
+      <div class="label">Type</div><div class="chips" id="f-kind"></div>
+    </section>
+
+    <section><h3>Must have</h3><div class="chips" id="f-am"></div></section>
+    <section><h3>Close to</h3><div class="chips" id="f-near"></div></section>
+
+    <section><h3>Commute</h3>
+      <p class="hint" id="work-hint">Set your workplace on the map to rank by drive time.</p>
+      <div id="commute-box" hidden>
+        <div class="label">Longest drive <output id="o-commute">Any</output></div>
+        <input type="range" id="f-commute" min="0" max="90" step="5" value="0" aria-label="Longest commute in minutes">
+        <button id="btn-clear-work" class="ghost small">Remove workplace</button>
+      </div>
+    </section>
+
+    <section><h3>What matters most</h3>
+      <p class="hint">Sets how much each thing moves the score. Hard limits above always apply.</p>
+      <div id="weights"></div>
+    </section>
+    <button id="btn-reset" class="ghost small">Reset everything</button>
+  </aside>
+
+  <aside class="panel right" id="results" aria-label="Results">
+    <div class="res-head">
+      <div><b id="res-n">0</b> societies fit <span id="res-sub"></span></div>
+      <select id="sort" aria-label="Sort"><option value="score">Best fit</option><option value="price">Lowest price</option><option value="commute">Shortest commute</option><option value="rating">Top rated</option><option value="value">Best value</option></select>
+    </div>
+    <ol id="list"></ol>
+    <div class="foot-actions"><button id="btn-csv" class="ghost small">Export these as CSV</button></div>
+  </aside>
+
+  <section id="card" class="card" hidden aria-live="polite"></section>
+  <section id="drawer" class="drawer" hidden aria-label="Shortlist"></section>
+  <div id="toast" class="toast" hidden></div>
+
+  <nav class="tabs"><button data-t="filters">Filters</button><button data-t="map" class="on">Map</button><button data-t="results">Results</button></nav>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
