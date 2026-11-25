@@ -78,10 +78,11 @@ def bounds(ans, prefix, steps):
 
 
 def key():
-    for line in (pathlib.Path.home() / ".claude" / ".env").read_text().splitlines():
-        if line.startswith("JEV_KEY="):
-            return line.split("=", 1)[1].strip().strip('"')
-    raise SystemExit("JEV_KEY not found in ~/.claude/.env")
+    """The Jev API key, read from the JEV_KEY environment variable."""
+    value = os.environ.get("JEV_KEY", "").strip()
+    if not value:
+        raise SystemExit("Set the JEV_KEY environment variable to your Jev API key.")
+    return value
 
 
 def fetch_image(url):
