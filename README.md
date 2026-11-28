@@ -1,75 +1,53 @@
-# Flat Finder
+# Homefit
 
-Rank every housing society in Gurugram by how well it fits **you**: budget, smallest bedroom, commute, amenities and what matters most to you.
+Rank every housing society in a city by how well it fits **you**: budget, smallest bedroom, commute, amenities and what matters most. Cities so far: Gurugram, Chennai, Bengaluru and Mumbai.
 
-A web app (`homefit/`) backed by a reproducible Python pipeline (`pipeline/`) that builds the dataset from public sources.
+## What it does
 
-> Derived from [kairothq/flat-finder](https://github.com/kairothq/flat-finder) (MIT). This project reuses its Gurugram dataset approach and replaces the pass/fail map with a weighted ranking.
+- **Fit score, 0 to 100.** You say how much price, bedroom size, amenities, nearby places, commute, value and resident ratings matter. Hard limits (type, budget, a must-have amenity, a too-long drive) remove a society outright.
+- **Commute.** Drop a workplace pin on the map and set a longest drive. The estimate is rough peak-hour traffic, not live routing.
+- **Value for money.** Each society's price per sq ft is compared with its area's median.
+- **Honest about gaps.** An unknown is scored cautiously and labelled "no data". Every card says how much of its score is backed by facts.
+- **Shortlist and compare** up to 6 societies side by side. Filters and shortlist live in a shareable link.
+- **List, sort and export.** Sort by fit, price, commute, rating or value, and export the results as CSV. On phones the panels become tabs.
 
-## Repository layout
+## Run it
 
-| Path | What it holds |
-|---|---|
-| `homefit/` | The web app (Vite + MapLibre GL). Scoring logic in `src/score.js`, with tests |
-| `pipeline/` | Python data pipeline: crawling, parsing, OCR, pricing, room-size estimation, tests |
-| `data/` | City configuration (`cities.json`) and hand-verified research per city (`data/verified/`) |
-
-## Highlights
-
-- **Fit score from 0 to 100**, weighted by the priorities you set (price, bedroom size, amenities, nearby places, commute, value, resident ratings).
-- **Commute-aware ranking**: drop a workplace pin to get a drive-time estimate and a commute limit.
-- **Value signal**: price per sq ft is compared with the area median.
-- **Honest about missing data**: unknown values are skipped and labelled "no data", and each card shows how much of the score is backed by facts.
-- **Shortlist and compare** up to six societies side by side.
-- **Shareable link** stores filters, priorities and shortlist in the URL.
-
-## Data pipeline
-
-The pipeline in `pipeline/` turns public sources into the data file the app reads:
-
-| Stage | Module | Purpose |
-|---|---|---|
-| Crawl | `mb_crawl.py`, `mb_parse.py` | Polite, cached, resumable Magicbricks crawler and parser |
-| Geometry | `osm_fetch.py`, `geo.py` | Residential areas and building footprints from OpenStreetMap |
-| Floor plans | `ocr.py`, `plan_ocr.py`, `brochure_ocr.py`, `found_ocr.py`, `hrera.py`, `jev_reader.py` | Read bedroom sizes from brochures, HRERA filings and floor plans |
-| Estimates | `pricing.py`, `rooms_model.py` | Labelled price estimates and a cautious lower bound for the smallest bedroom |
-| Build | `build_city.py`, `verified.py` | Merge everything with hand-verified research into the web data files |
-
-The OCR stages use the macOS Vision framework, so they run on macOS. The web app and the rest of the pipeline run anywhere.
-
-## Run the web app
-
-Requires Node.js 18 or later.
-
-```bash
+```powershell
 cd homefit
 npm install
-npm run dev      # http://localhost:5173
+npm run dev      # app, http://localhost:5173
 npm test         # scoring tests
 npm run build
 ```
 
-## Run the pipeline tests
+## Build a city's data (`pipeline/`, Python 3.9 or later, standard library only)
 
-Requires Python 3.10 or later and `pytest`.
-
-```bash
+```powershell
 cd pipeline
-pip install pytest
-pytest
+python crawl.py list chennai        # result pages -> out/chennai/index.json   (cached, resumable)
+python crawl.py projects chennai    # project pages -> out/chennai/projects.json
+python osm.py chennai               # parks, stations, schools, hospitals, malls from OpenStreetMap
+python build.py chennai             # -> homefit/public/data/chennai.json
+python -m unittest discover -s tests
 ```
 
-## How the score works
+Add a city by adding an entry to `data/cities.json` (Magicbricks slug, bounding box, map centre, optional `maxListPages`). Crawling is polite: about one request a second per worker, with every page cached on disk.
 
-Hard limits remove a society: wrong type, over budget by more than 15%, a bedroom read from a plan below your minimum, a missing must-have amenity, or a drive longer than 125% of your limit. Everything else is scored from 0 to 1 per priority, then averaged by your weights. Estimated bedroom sizes never fail a society and score lower than sizes read from plans.
+## How the numbers are made
 
-## Limitations
+What is read from the source: location, developer, status, possession, unit sizes, price per sq ft, amenities, resident ratings, listing counts. Everything below is **our estimate and is marked `~`** in the app:
 
-- Gurugram only for now. `data/cities.json` is set up for other cities.
-- Prices marked `~` are estimates, not live listings.
-- Commute is a rough peak-hour figure: straight line x 1.4 at 22 km/h, plus 5 minutes.
-- Check any figure against the listing before acting on it.
+- per-BHK buy price = typical unit size x the project's price per sq ft, kept within its listed price range (when no rate is printed, the price range spread over the typical size);
+- rent = that price x a rental yield by BHK (4% for 1 BHK down to 2% for 5);
+- smallest bedroom = a simple share-of-area model from unit size. It never fails a society on its own and scores lower than a measured plan would.
+
+Nearby distances are straight-line to the closest OpenStreetMap point. Check anything important against the listing link before acting on it.
+
+## Limits
+
+Many projects list no unit sizes or rates, so prices are missing for about half of Chennai and Gurugram and a fifth of Bengaluru and Mumbai. Chennai, Bengaluru and Mumbai cover the first ~1,000 projects Magicbricks lists, not the whole city. Bedroom sizes are estimates, not floor-plan readings. Commute is not live traffic.
 
 ## Credits
 
-Dataset approach and original project: [kairothq/flat-finder](https://github.com/kairothq/flat-finder), MIT licensed.
+Project data comes from Magicbricks project pages and places from OpenStreetMap contributors (ODbL). The idea of ranking societies by room size and budget on a map was inspired by [kairothq/flat-finder](https://github.com/kairothq/flat-finder) (MIT). No code or data from that project is included here.

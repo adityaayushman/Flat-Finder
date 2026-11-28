@@ -17,7 +17,8 @@ const LEVELS = ['Ignore', 'Low', 'Medium', 'High'];
 
 let data, byId = new Map(), c, results = new Map(), shown = [];
 let sort = 'score', selected = null, picking = false, mapMode = store.get('hf-map', 'dark');
-let shortlist = store.get('hf-short', []);
+let shortlist = [], cityId = 'gurgaon', cities = {};
+const hashState = () => { const m = location.hash.match(/s=([^&]+)/); return m ? decodeState(m[1]) : null; };
 let map, workMarker;
 
 const clone = (o) => JSON.parse(JSON.stringify(o));
@@ -26,7 +27,11 @@ const fresh = () => clone(DEFAULTS);
 // ---------- boot ----------
 async function boot() {
   c = fresh();
-  const res = await fetch('/data/gurgaon.json');
+  cities = await (await fetch('/data/cities.json')).json();
+  const first = hashState();
+  cityId = [first?.city, store.get('hf-city', null), 'gurgaon', ...Object.keys(cities)].find((id) => cities[id]);
+  shortlist = store.get('hf-short-' + cityId, []);
+  const res = await fetch(`/data/${cityId}.json`);
   data = await res.json();
   for (const s of data.societies) byId.set(s.id, s);
   loadHash();
@@ -36,15 +41,14 @@ async function boot() {
 }
 
 function loadHash() {
-  const m = location.hash.match(/s=([^&]+)/);
-  const st = m && decodeState(m[1]);
-  if (!st) return;
+  const st = hashState();
+  if (!st || (st.city && st.city !== cityId)) return;
   c = { ...fresh(), ...st.c, w: { ...DEFAULTS.w, ...(st.c?.w || {}) } };
   if (st.sort) sort = st.sort;
-  if (Array.isArray(st.short)) { shortlist = st.short.filter((id) => byId.has(id)); store.set('hf-short', shortlist); }
+  if (Array.isArray(st.short)) { shortlist = st.short.filter((id) => byId.has(id)); store.set('hf-short-' + cityId, shortlist); }
 }
 function saveHash() {
-  const st = { c, sort, short: shortlist };
+  const st = { city: cityId, c, sort, short: shortlist };
   history.replaceState(null, '', `#s=${encodeState(st)}`);
 }
 
@@ -101,6 +105,10 @@ function buildControls() {
   }
 
   document.querySelectorAll('.tabs button').forEach((b) => { b.onclick = () => { document.body.dataset.tab = b.dataset.t; syncTabs(); }; });
+  const pick = $('city-pick');
+  pick.innerHTML = Object.entries(cities).map(([id, v]) => `<option value="${id}">${esc(v.name)}</option>`).join('');
+  pick.value = cityId;
+  pick.onchange = () => { store.set('hf-city', pick.value); history.replaceState(null, '', location.pathname); location.reload(); };
   buildSearch();
   syncInputs();
   applyTheme();
@@ -161,7 +169,7 @@ function colorExpr() {
 }
 
 function initMap() {
-  map = new maplibregl.Map({ container: 'map', style: STYLES[mapMode], center: data.city.center, zoom: 11.2, attributionControl: { compact: true }, dragRotate: false });
+  map = new maplibregl.Map({ container: 'map', style: STYLES[mapMode], center: data.city.center, zoom: data.city.zoom || 11.2, attributionControl: { compact: true }, dragRotate: false });
   map.touchZoomRotate.disableRotation();
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
   map.on('style.load', addLayers);
@@ -311,7 +319,7 @@ function renderCard(s) {
 function toggleShort(id) {
   const i = shortlist.indexOf(id);
   if (i >= 0) shortlist.splice(i, 1); else if (shortlist.length >= 6) return toast('Shortlist holds 6. Remove one first.'); else shortlist.push(id);
-  store.set('hf-short', shortlist);
+  store.set('hf-short-' + cityId, shortlist);
   update();
 }
 function toggleDrawer() { const d = $('drawer'); d.hidden = !d.hidden; if (!d.hidden) renderDrawer(); }
