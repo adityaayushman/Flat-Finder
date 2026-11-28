@@ -1,6 +1,6 @@
 # Homefit
 
-Rank every housing society in a city by how well it fits **you**: budget, smallest bedroom, commute, amenities and what matters most. Cities so far: Gurugram and Chennai.
+Rank every housing society in a city by how well it fits **you**: budget, smallest bedroom, commute, amenities and what matters most. Cities so far: Gurugram, Chennai, Bengaluru and Mumbai.
 
 ## What it does
 
@@ -46,7 +46,7 @@ Nearby distances are straight-line to the closest OpenStreetMap point. Check any
 
 ## Limits
 
-Many projects list no unit sizes or rates, so about half of Chennai has no price. Bedroom sizes are estimates, not floor-plan readings. Commute is not live traffic.
+Many projects list no unit sizes or rates, so prices are missing for about half of Chennai and Gurugram and a fifth of Bengaluru and Mumbai. Chennai, Bengaluru and Mumbai cover the first ~1,000 projects Magicbricks lists, not the whole city. Bedroom sizes are estimates, not floor-plan readings. Commute is not live traffic.
 
 ## Credits
 
